@@ -1499,11 +1499,6 @@ protected:
 		bucket *my_b;
 
 	public:
-		bucket_accessor()
-		{
-			my_b = nullptr;
-		}
-
 		bucket_accessor(concurrent_hash_map *base, const hashcode_t h,
 				bool writer = false)
 		{
@@ -2381,9 +2376,6 @@ protected:
 #endif
 
 		while (true) {
-			/* get bucket and acquire the lock */
-			b.acquire(this, h & m);
-
 			/* find a node */
 			auto n = search_bucket(key, b.get());
 
@@ -2399,11 +2391,6 @@ protected:
 						b.downgrade_to_reader();
 						return n;
 					}
-				}
-
-				if (check_mask_race(h, m)) {
-					b.release();
-					continue;
 				}
 			}
 
@@ -2467,11 +2454,19 @@ concurrent_hash_map<Key, T, Hash, KeyEqual, MutexType,
 	persistent_node_ptr_t node;
 
 	while (true) {
-		bucket_accessor b;
+		/* get bucket and acquire the lock */
+		bucket_accessor b(this, h & m);
 		node = get_node<false>(key, h, m, b);
 
-		if (!node)
-			return false;
+		if (!node) {
+			/* Element was possibly relocated, try again */
+			if (check_mask_race(h, m)) {
+				b.release();
+				continue;
+			} else {
+				return false;
+			}
+		}
 
 		/* No need to acquire the item or item acquired */
 		if (!result ||
@@ -2518,10 +2513,17 @@ concurrent_hash_map<Key, T, Hash, KeyEqual, MutexType,
 	bool inserted = false;
 
 	while (true) {
-		bucket_accessor b;
+		/* get bucket and acquire the lock */
+		bucket_accessor b(this, h & m);
 		node = get_node<true>(key, h, m, b);
 
 		if (!node) {
+			/* Element was possibly relocated, try again */
+			if (check_mask_race(h, m)) {
+				b.release();
+				continue;
+			}
+
 			/* insert and set flag to grow the container */
 			new_size = insert_new_node(b.get(), node,
 						   std::forward<Args>(args)...);
