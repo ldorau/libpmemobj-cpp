@@ -10,7 +10,7 @@ services:
 env:
   global:
     - GITHUB_REPO=pmem/libpmemobj-cpp
-    - DOCKERHUB_REPO=pmem/libpmemobj-cpp
+    - DOCKERHUB_REPO=ldorau/libpmemobj-cpp
   matrix:
     - TYPE=debug OS=fedora OS_VER=31 PUSH_IMAGE=1 AUTO_DOC_UPDATE=1
     - TYPE=debug OS=ubuntu OS_VER=19.10 PUSH_IMAGE=1
@@ -30,8 +30,7 @@ before_install:
   - ./pull-or-rebuild-image.sh
 
 script:
-  - ./build.sh
+  - images/push-image.sh $OS-$OS_VER
 
 after_success:
-  - source ./set-vars.sh
-  - if [[ -f $CI_FILE_PUSH_IMAGE_TO_REPO ]]; then ./images/push-image.sh $OS-$OS_VER; fi
+  - date
