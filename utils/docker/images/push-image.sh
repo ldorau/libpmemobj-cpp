@@ -11,7 +11,9 @@
 # for automated builds.
 #
 
-set -e
+set -ex
+
+OSVER=$OS-$OS_VER
 
 function usage {
 	echo "Usage:"
@@ -22,22 +24,22 @@ function usage {
 }
 
 # Check if the first argument is nonempty
-if [[ -z "$1" ]]; then
+if [[ -z "$OSVER" ]]; then
 	usage
 	exit 1
 fi
 
 # Check if the image tagged with ${DOCKERHUB_REPO}:1.10-OS-VER exists locally
-if [[ ! $(docker images -a | awk -v pattern="^${DOCKERHUB_REPO}:1.10-$1\$" \
-	'$1":"$2 ~ pattern') ]]
+if [[ ! $(docker images -a | awk -v pattern="^${DOCKERHUB_REPO}:1.10-$OSVER\$" \
+	'$OSVER":"$2 ~ pattern') ]]
 then
 	echo "ERROR: wrong argument."
 	usage
-	exit 1
+	# exit 1
 fi
 
 # Log in to the Docker Hub
 docker login -u="$DOCKERHUB_USER" -p="$DOCKERHUB_PASSWORD"
 
 # Push the image to the repository
-docker push ${DOCKERHUB_REPO}:1.10-$1
+docker push ${DOCKERHUB_REPO}:1.10-$OSVER
