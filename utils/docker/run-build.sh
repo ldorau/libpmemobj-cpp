@@ -35,7 +35,18 @@
 #                and starts a build of libpmemobj-cpp.
 #
 
-set -e
+set -ex
+
+echo "Running auto doc update"
+
+mkdir doc_update
+cd doc_update
+
+$SCRIPTSDIR/run-doc-update.sh
+
+cd ..
+rm -rf doc_update
+exit 0
 
 CHECK_CPP_STYLE=${CHECK_CPP_STYLE:-ON}
 TESTS_LONG=${TESTS_LONG:-OFF}
@@ -367,17 +378,4 @@ do
 done
 
 rm -r $INSTALL_DIR
-
-# Trigger auto doc update on master
-if [[ "$AUTO_DOC_UPDATE" == "1" ]]; then
-	echo "Running auto doc update"
-
-	mkdir doc_update
-	cd doc_update
-
-	$SCRIPTSDIR/run-doc-update.sh
-
-	cd ..
-	rm -rf doc_update
-fi
 
