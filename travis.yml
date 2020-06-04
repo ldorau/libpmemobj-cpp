@@ -10,18 +10,16 @@ services:
 env:
   global:
     - GITHUB_REPO=pmem/libpmemobj-cpp
-    - DOCKERHUB_REPO=pmem/libpmemobj-cpp
+    - DOCKERHUB_REPO=ldorau/libpmemobj-cpp
   matrix:
-    - OS=ubuntu OS_VER=19.10 TYPE=debug PUSH_IMAGE=1
-    - OS=fedora OS_VER=31    TYPE=debug PUSH_IMAGE=1
-    - OS=ubuntu OS_VER=19.10 TYPE=release
-    - OS=fedora OS_VER=31    TYPE=release AUTO_DOC_UPDATE=1
-    - OS=ubuntu OS_VER=19.10 TYPE=valgrind
-    - OS=ubuntu OS_VER=19.10 TYPE=memcheck_drd
-    - OS=ubuntu OS_VER=19.10 TYPE=package
-    - OS=fedora OS_VER=31    TYPE=package
-    - OS=ubuntu OS_VER=19.10 TYPE=coverage
-    - OS=ubuntu OS_VER=19.10 TYPE=coverity
+    - TYPE=release OS=archlinux-base OS_VER=latest
+    - TYPE=release OS=centos OS_VER=8
+    - TYPE=release OS=debian OS_VER=testing
+    - TYPE=release OS=debian OS_VER=unstable
+    - TYPE=release OS=fedora OS_VER=rawhide
+    - TYPE=release OS=opensuse-leap OS_VER=latest
+    - TYPE=release OS=opensuse-tumbleweed OS_VER=latest
+    - TYPE=release OS=ubuntu OS_VER=rolling
 
 before_install:
   - echo $TRAVIS_COMMIT_RANGE
@@ -30,8 +28,7 @@ before_install:
   - ./pull-or-rebuild-image.sh
 
 script:
-  - ./build.sh
+  - images/push-image.sh $OS-$OS_VER
 
 after_success:
-  - source ./set-vars.sh
-  - if [[ -f $CI_FILE_PUSH_IMAGE_TO_REPO ]]; then ./images/push-image.sh $OS-$OS_VER; fi
+  - date
